@@ -17,9 +17,10 @@ void setup()
   digitalWrite(RFM95_RST, HIGH);
 
   Serial.begin(115200);    
-  //while (!Serial);
+  while (!Serial);
   delay(100);
 
+  Serial.println();
   Serial.println("Starting LoRa Sender");
 
   //manual reset
@@ -59,12 +60,14 @@ void loop()
       Serial.println((char*)buf);
       Serial.print("RSSI: ");
       Serial.println(rf95.lastRssi(), DEC);
+      delay(10);
 
       //reply
-      uint8_t response[] = "Hello back";
-      rf95.send(response, sizeof(response));
+      char response[] = "Hello back";
+      rf95.send((uint8_t *)response, sizeof(response));
       rf95.waitPacketSent();
-      Serial.println("Response sent");
+      Serial.print("Response sent: ");
+      Serial.println(response);
     }
     else
     {
