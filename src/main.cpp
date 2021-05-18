@@ -2,7 +2,17 @@
 #include <SPI.h>
 #include <RH_RF95.h>
 
-#define RF95_FREQ 868.0
+#define RF95_FREQ 868.1
+//#define RF95_FREQ 868.3
+//#define RF95_FREQ 868.5
+//#define RF95_FREQ 867.1
+//#define RF95_FREQ 867.3
+//#define RF95_FREQ 867.5
+//#define RF95_FREQ 867.7
+//#define RF95_FREQ 867.9
+//#define RF95_FREQ 868.8
+//#define RF95_FREQ 869.525
+
 #define RFM95_RST D0
 #define RFM95_INT D1
 #define RFM95_CS D8
