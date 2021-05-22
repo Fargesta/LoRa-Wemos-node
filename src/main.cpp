@@ -1,24 +1,38 @@
 #include <Arduino.h>
 #include <SPI.h>
 #include <RH_RF95.h>
-
-#define RF95_FREQ 868.1
-//#define RF95_FREQ 868.3
-//#define RF95_FREQ 868.5
-//#define RF95_FREQ 867.1
-//#define RF95_FREQ 867.3
-//#define RF95_FREQ 867.5
-//#define RF95_FREQ 867.7
-//#define RF95_FREQ 867.9
-//#define RF95_FREQ 868.8
-//#define RF95_FREQ 869.525
-
-#define RFM95_RST D0
-#define RFM95_INT D1
-#define RFM95_CS D8
+#include <main.h>
 
 RH_RF95 rf95(RFM95_CS, RFM95_INT);
 int16_t packetNum = 0;
+
+//Network join status
+bool isJoined = false;
+
+//Millis timer setup
+int delayPeriod = 1000;
+unsigned long timeNow = 0;
+
+void SendResponse(String responseText, String code)
+{
+  //reply
+  String response = NAME;
+  response += ID;
+  response += code;
+  response += responseText;
+  short messageLength = response.length();
+  char radioMessage[messageLength + 1];
+  response.toCharArray(radioMessage, messageLength);
+
+  Serial.print(">>Sending command: ");
+  Serial.println(response);
+  radioMessage[messageLength] = 0;
+  delay(10);
+  rf95.send((uint8_t *)radioMessage, messageLength);
+
+  delay(10);
+  rf95.waitPacketSent();
+}
 
 void setup()
 {
@@ -58,6 +72,16 @@ void setup()
 
 void loop()
 {
+  if (!isJoined)
+  {
+    //Send SYN request each second until ACK received
+    if(millis() > timeNow + delayPeriod)
+    {
+      timeNow = millis();
+      SendResponse(SYN, OK);
+    }
+  }
+  
   if(rf95.available())
   {
     uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
@@ -65,23 +89,51 @@ void loop()
 
     if(rf95.recv(buf, &len))
     {
-      RH_RF95::printBuffer("Received:", buf, len);
-      Serial.print("Got: ");
-      Serial.println((char*)buf);
-      Serial.print("RSSI: ");
-      Serial.println(rf95.lastRssi(), DEC);
-      delay(10);
+      //RH_RF95::printBuffer("Received:", buf, len);
+      String cmd = (char*)buf;
+      String response = GW_NAME;
+      response += GW_ID;
+      if(cmd.substring(0, 4).equals(NAME))
+      {
+        cmd = cmd.substring(4);
+        //decrypt here
+        //...
+        if(cmd.substring(4, 8).equals(ID))
+        {
+          //serial debug
+          Serial.print("Got: ");
+          Serial.println((char*)buf);
+          //Serial.print("RSSI: ");
+          //Serial.println(rf95.lastRssi(), DEC);
+          delay(10);
 
-      //reply
-      char response[] = "Hello back";
-      rf95.send((uint8_t *)response, sizeof(response));
-      rf95.waitPacketSent();
-      Serial.print("Response sent: ");
-      Serial.println(response);
+          //parse command
+          cmd = cmd.substring(8, 10);
+          if(cmd.equals(ON)) 
+          {
+            //Wifi ON
+            SendResponse("wifion", OK);
+          }
+          else if (cmd.equals(OF))
+          {
+            //Wifi OFF
+            SendResponse("wifioff", OK);
+          }
+          else if (cmd.equals(ACK))
+          {
+            isJoined = true;
+            SendResponse("joined", OK);
+          }
+          else
+          {
+            SendResponse("Unknown command", ERROR);
+          }
+        }
+      }
     }
     else
     {
-      Serial.println("Receive failed");
+      SendResponse("Read buffer", ERROR);
     }
   }
 }
