@@ -10,13 +10,14 @@ int16_t packetNum = 0;
 bool isJoined = false;
 
 //Millis timer setup
-int delayPeriod = 1000;
+int delayPeriod = 2000;
 unsigned long timeNow = 0;
 
 void SendResponse(String responseText, String code)
 {
   //reply
-  String response = NAME;
+  String response = GW_NAME;
+  response += GW_ID;
   response += ID;
   response += code;
   response += responseText;
