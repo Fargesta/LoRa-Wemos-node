@@ -1,14 +1,14 @@
 //Node Keys
-#define NAME "zn01"         //4 symbols
-#define ID "QV?+p,(j"       //8 symbols
-#define GW_NAME "gw01"      //4 symbols
-#define GW_ID "F!;Gx[+G"    //8 symbols
+#define NETWORK_ID "14"         //4 symbols
+#define PASSWORD "QV?+p,(j"       //8 symbols
+#define GW_NETWORK_ID 13         //uint8_t
+#define GW_PASSWORD "F!;Gx[+G"    //8 symbols
 
 //Commands
 #define SYN "sy"           //Initial SYN request
 #define ACK "ac"           //Network join confirmation after SYN
 #define ON "on"             //Turn on WiFi
-#define OF "of"             //Turn off WiFi
+#define OFF "of"             //Turn off WiFi
 
 //Response coded
 #define ERROR "er"
@@ -29,3 +29,6 @@
 #define RFM95_RST D0
 #define RFM95_INT D1
 #define RFM95_CS D8
+
+//encryption key
+unsigned char encryptKey[16] = {'E', 'B', 3, 'v', 'J', 'k', 'Y', '#', 9, 5, 'y', 's', 'W', '!', '9', 'J'};
