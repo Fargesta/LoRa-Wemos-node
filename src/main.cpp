@@ -1,10 +1,14 @@
 #include <Arduino.h>
 #include <SPI.h>
 #include <RH_RF95.h>
+#include <RHEncryptedDriver.h>
+#include <Speck.h>
 #include <main.h>
 
+//Init driver and encrytion
 RH_RF95 rf95(RFM95_CS, RFM95_INT);
-int16_t packetNum = 0;
+Speck msgCipher;
+RHEncryptedDriver encDriver(rf95, msgCipher);
 
 //Network join status
 bool isJoined = false;
@@ -16,9 +20,8 @@ unsigned long timeNow = 0;
 void SendResponse(String responseText, String code)
 {
   //reply
-  String response = GW_NAME;
-  response += GW_ID;
-  response += ID;
+  String response = GW_PASSWORD;
+  response += PASSWORD;
   response += code;
   response += responseText;
   short messageLength = response.length() + 1; //must be +1 for eof symbol
@@ -29,10 +32,10 @@ void SendResponse(String responseText, String code)
   Serial.println(radioMessage);
   radioMessage[messageLength] = 0;
   delay(10);
-  rf95.send((uint8_t *)radioMessage, messageLength);
+  encDriver.send((uint8_t *)radioMessage, messageLength);
 
   delay(10);
-  rf95.waitPacketSent();
+  encDriver.waitPacketSent();
 }
 
 void setup()
@@ -69,6 +72,8 @@ void setup()
   Serial.println(RF95_FREQ);
 
   rf95.setTxPower(23, false);
+  msgCipher.setKey(encryptKey, sizeof(encryptKey));
+  encDriver.setHeaderTo(GW_NETWORK_ID);
 }
 
 void loop()
@@ -83,52 +88,36 @@ void loop()
     }
   }
   
-  if(rf95.available())
+  if(encDriver.available())
   {
     uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
     uint8_t len = sizeof(buf);
 
-    if(rf95.recv(buf, &len))
+    if(encDriver.recv(buf, &len))
     {
-      //RH_RF95::printBuffer("Received:", buf, len);
       String cmd = (char*)buf;
-      String response = GW_NAME;
-      response += GW_ID;
-      if(cmd.substring(0, 4).equals(NAME))
+      if(cmd.substring(4, 8).equals(PASSWORD))
       {
-        cmd = cmd.substring(4);
-        //decrypt here
-        //...
-        if(cmd.substring(4, 8).equals(ID))
+        //parse command
+        cmd = cmd.substring(8, 10);
+        if(cmd.equals(ON)) 
         {
-          //serial debug
-          Serial.print("Got: ");
-          Serial.println((char*)buf);
-          //Serial.print("RSSI: ");
-          //Serial.println(rf95.lastRssi(), DEC);
-          delay(10);
-
-          //parse command
-          cmd = cmd.substring(8, 10);
-          if(cmd.equals(ON)) 
-          {
-            //Wifi ON
-            SendResponse("wifion", OK);
-          }
-          else if (cmd.equals(OF))
-          {
-            //Wifi OFF
-            SendResponse("wifioff", OK);
-          }
-          else if (cmd.equals(ACK))
-          {
-            isJoined = true;
-            SendResponse("joined", OK);
-          }
-          else
-          {
-            SendResponse("Unknown command", ERROR);
-          }
+          //WiFi ON
+          SendResponse(ON, OK);
+        }
+        else if (cmd.equals(OFF))
+        {
+          //WiFi OFF
+          SendResponse(OFF, OK);
+        }
+        else if (cmd.equals(ACK))
+        {
+          isJoined = true;
+          SendResponse("joined", OK);
+        }
+        else
+        {
+          SendResponse("Unknown command", ERROR);
         }
       }
     }
