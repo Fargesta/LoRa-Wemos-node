@@ -14,7 +14,7 @@ RHEncryptedDriver encDriver(rf95, msgCipher);
 bool isJoined = false;
 
 //Millis timer setup
-int delayPeriod = 2000;
+int delayPeriod = 3000;
 unsigned long timeNow = 0;
 
 void SendResponse(String responseText, String code)
@@ -74,20 +74,11 @@ void setup()
   rf95.setTxPower(23, false);
   msgCipher.setKey(encryptKey, sizeof(encryptKey));
   encDriver.setHeaderTo(GW_NETWORK_ID);
+  encDriver.setThisAddress(NETWORK_ID);
 }
 
 void loop()
 {
-  if (!isJoined)
-  {
-    //Send SYN request each second until ACK received
-    if(millis() > timeNow + delayPeriod)
-    {
-      timeNow = millis();
-      SendResponse(SYN, OK);
-    }
-  }
-  
   if(encDriver.available())
   {
     uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
@@ -96,7 +87,9 @@ void loop()
     if(encDriver.recv(buf, &len))
     {
       String cmd = (char*)buf;
-      if(cmd.substring(4, 8).equals(PASSWORD))
+      Serial.println(cmd);
+
+      if(cmd.substring(0, 8).equals(PASSWORD))
       {
         //parse command
         cmd = cmd.substring(8, 10);
@@ -113,7 +106,6 @@ void loop()
         else if (cmd.equals(ACK))
         {
           isJoined = true;
-          SendResponse("joined", OK);
         }
         else
         {
@@ -124,6 +116,15 @@ void loop()
     else
     {
       SendResponse("Read buffer", ERROR);
+    }
+  }
+  else if (!isJoined)
+  {
+    //Send SYN request each second until ACK received
+    if(millis() > timeNow + delayPeriod)
+    {
+      timeNow = millis();
+      SendResponse(SYN, OK);
     }
   }
 }
