@@ -21,12 +21,12 @@ void SendResponse(String responseText, String code)
   response += ID;
   response += code;
   response += responseText;
-  short messageLength = response.length();
+  short messageLength = response.length() + 1; //must be +1 for eof symbol
   char radioMessage[messageLength + 1];
   response.toCharArray(radioMessage, messageLength);
 
   Serial.print(">>Sending command: ");
-  Serial.println(response);
+  Serial.println(radioMessage);
   radioMessage[messageLength] = 0;
   delay(10);
   rf95.send((uint8_t *)radioMessage, messageLength);

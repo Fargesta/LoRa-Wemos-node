@@ -5,8 +5,8 @@
 #define GW_ID "F!;Gx[+G"    //8 symbols
 
 //Commands
-#define SYN "syn"           //Initial SYN request
-#define ACK "ack"           //Network join confirmation after SYN
+#define SYN "sy"           //Initial SYN request
+#define ACK "ac"           //Network join confirmation after SYN
 #define ON "on"             //Turn on WiFi
 #define OF "of"             //Turn off WiFi
 
