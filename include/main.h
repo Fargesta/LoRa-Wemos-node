@@ -32,3 +32,7 @@
 
 //encryption key
 unsigned char encryptKey[16] = {'E', 'B', 3, 'v', 'J', 'k', 'Y', '#', 9, 5, 'y', 's', 'W', '!', '9', 'J'};
+
+//WiFi config
+#define SSID "dp5_01"
+#define WIFIPASS "madebyeugeneb"

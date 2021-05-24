@@ -3,6 +3,7 @@
 #include <RH_RF95.h>
 #include <RHEncryptedDriver.h>
 #include <Speck.h>
+#include <ESP8266WiFi.h>
 #include <main.h>
 
 //Init driver and encrytion
@@ -96,12 +97,26 @@ void loop()
         if(cmd.equals(ON)) 
         {
           //WiFi ON
-          SendResponse(ON, OK);
+          if(WiFi.softAP(SSID, WIFIPASS))
+          {
+            SendResponse(ON, OK);
+          }
+          else
+          {
+            SendResponse("Enable WiFi failed!", ERROR);
+          }
         }
         else if (cmd.equals(OFF))
         {
           //WiFi OFF
-          SendResponse(OFF, OK);
+          if(WiFi.softAPdisconnect(true))
+          {
+            SendResponse(OFF, OK);
+          }
+          else
+          {
+            SendResponse("Disable WiFi failed", ERROR);
+          }
         }
         else if (cmd.equals(ACK))
         {
