@@ -1,7 +1,7 @@
 //Node Keys
-#define NETWORK_ID "14"         //4 symbols
+#define NETWORK_ID 14             //uint8_t
 #define PASSWORD "QV?+p,(j"       //8 symbols
-#define GW_NETWORK_ID 13         //uint8_t
+#define GW_NETWORK_ID 13          //uint8_t
 #define GW_PASSWORD "F!;Gx[+G"    //8 symbols
 
 //Commands
@@ -32,3 +32,7 @@
 
 //encryption key
 unsigned char encryptKey[16] = {'E', 'B', 3, 'v', 'J', 'k', 'Y', '#', 9, 5, 'y', 's', 'W', '!', '9', 'J'};
+
+//WiFi config
+#define SSID "dp5_01"
+#define WIFIPASS "madebyeugeneb"

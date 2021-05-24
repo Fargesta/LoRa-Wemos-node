@@ -3,6 +3,7 @@
 #include <RH_RF95.h>
 #include <RHEncryptedDriver.h>
 #include <Speck.h>
+#include <ESP8266WiFi.h>
 #include <main.h>
 
 //Init driver and encrytion
@@ -14,7 +15,7 @@ RHEncryptedDriver encDriver(rf95, msgCipher);
 bool isJoined = false;
 
 //Millis timer setup
-int delayPeriod = 2000;
+int delayPeriod = 3000;
 unsigned long timeNow = 0;
 
 void SendResponse(String responseText, String code)
@@ -74,20 +75,11 @@ void setup()
   rf95.setTxPower(23, false);
   msgCipher.setKey(encryptKey, sizeof(encryptKey));
   encDriver.setHeaderTo(GW_NETWORK_ID);
+  encDriver.setThisAddress(NETWORK_ID);
 }
 
 void loop()
 {
-  if (!isJoined)
-  {
-    //Send SYN request each second until ACK received
-    if(millis() > timeNow + delayPeriod)
-    {
-      timeNow = millis();
-      SendResponse(SYN, OK);
-    }
-  }
-  
   if(encDriver.available())
   {
     uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
@@ -96,24 +88,43 @@ void loop()
     if(encDriver.recv(buf, &len))
     {
       String cmd = (char*)buf;
-      if(cmd.substring(4, 8).equals(PASSWORD))
+      Serial.println(cmd);
+
+      if(cmd.substring(0, 8).equals(PASSWORD))
       {
         //parse command
         cmd = cmd.substring(8, 10);
         if(cmd.equals(ON)) 
         {
           //WiFi ON
-          SendResponse(ON, OK);
+          if(WiFi.softAP(SSID, WIFIPASS))
+          {
+            SendResponse(ON, OK);
+          }
+          else
+          {
+            SendResponse("Enable WiFi failed!", ERROR);
+          }
         }
         else if (cmd.equals(OFF))
         {
           //WiFi OFF
-          SendResponse(OFF, OK);
+          if(WiFi.softAPdisconnect(true))
+          {
+            SendResponse(OFF, OK);
+          }
+          else
+          {
+            SendResponse("Disable WiFi failed", ERROR);
+          }
         }
         else if (cmd.equals(ACK))
         {
-          isJoined = true;
-          SendResponse("joined", OK);
+          if(!isJoined)
+          {
+            delayPeriod = 300000;
+            isJoined = true;
+          }
         }
         else
         {
@@ -124,6 +135,15 @@ void loop()
     else
     {
       SendResponse("Read buffer", ERROR);
+    }
+  }
+  else
+  {
+    //Send SYN request each second until ACK received
+    if(millis() > timeNow + delayPeriod)
+    {
+      timeNow = millis();
+      SendResponse(SYN, OK);
     }
   }
 }
