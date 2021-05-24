@@ -120,7 +120,11 @@ void loop()
         }
         else if (cmd.equals(ACK))
         {
-          isJoined = true;
+          if(!isJoined)
+          {
+            delayPeriod = 300000;
+            isJoined = true;
+          }
         }
         else
         {
@@ -133,7 +137,7 @@ void loop()
       SendResponse("Read buffer", ERROR);
     }
   }
-  else if (!isJoined)
+  else
   {
     //Send SYN request each second until ACK received
     if(millis() > timeNow + delayPeriod)
