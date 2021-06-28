@@ -15,7 +15,7 @@ RHEncryptedDriver encDriver(rf95, msgCipher);
 bool isJoined = false;
 
 //Millis timer setup
-int delayPeriod = 3000;
+int delayPeriod = 4000;
 unsigned long timeNow = 0;
 
 void SendResponse(String responseText, String code)
@@ -73,6 +73,8 @@ void setup()
   Serial.println(RF95_FREQ);
 
   rf95.setTxPower(23, false);
+  rf95.setSignalBandwidth(62500);
+  rf95.setSpreadingFactor(10);
   msgCipher.setKey(encryptKey, sizeof(encryptKey));
   encDriver.setHeaderTo(GW_NETWORK_ID);
   encDriver.setThisAddress(NETWORK_ID);
@@ -126,6 +128,10 @@ void loop()
             isJoined = true;
           }
         }
+        else if(cmd.equals(PING))
+        {
+          SendResponse(SYN, OK);
+        }
         else
         {
           SendResponse("Unknown command", ERROR);
@@ -139,7 +145,7 @@ void loop()
   }
   else
   {
-    //Send SYN request each second until ACK received
+    //Send SYN request each 3 seconds until ACK received
     if(millis() > timeNow + delayPeriod)
     {
       timeNow = millis();
