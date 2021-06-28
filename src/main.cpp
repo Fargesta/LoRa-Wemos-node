@@ -14,6 +14,9 @@ RHEncryptedDriver encDriver(rf95, msgCipher);
 //Network join status
 bool isJoined = false;
 
+//Wifi status
+bool isWifiEnabled = false;
+
 //Millis timer setup
 int delayPeriod = 4000;
 unsigned long timeNow = 0;
@@ -29,8 +32,8 @@ void SendResponse(String responseText, String code)
   char radioMessage[messageLength + 1];
   response.toCharArray(radioMessage, messageLength);
 
-  Serial.print(">>Sending command: ");
-  Serial.println(radioMessage);
+  // Serial.print(">>Sending command: ");
+  // Serial.println(radioMessage);
   radioMessage[messageLength] = 0;
   delay(10);
   encDriver.send((uint8_t *)radioMessage, messageLength);
@@ -45,12 +48,12 @@ void setup()
 
   digitalWrite(RFM95_RST, HIGH);
 
-  Serial.begin(115200);    
-  while (!Serial);
-  delay(100);
+  // Serial.begin(115200);    
+  // while (!Serial);
+  // delay(100);
 
-  Serial.println();
-  Serial.println("Starting LoRa Sender");
+  // Serial.println();
+  // Serial.println("Starting LoRa Sender");
 
   //manual reset
   digitalWrite(RFM95_RST, LOW);
@@ -59,22 +62,23 @@ void setup()
 
   while(!rf95.init())
   {
-    Serial.println("LoRa radio init failed");
+    // Serial.println("LoRa radio init failed");
     while (1);
   }
-  Serial.println("LoRa radio init OK!");
+  // Serial.println("LoRa radio init OK!");
 
   if(!rf95.setFrequency(RF95_FREQ))
   {
-    Serial.println("setFrequency failed");
+    // Serial.println("setFrequency failed");
     while(1);
   }
-  Serial.print("Set freq to: ");
-  Serial.println(RF95_FREQ);
+  // Serial.print("Set freq to: ");
+  // Serial.println(RF95_FREQ);
 
   rf95.setTxPower(23, false);
   rf95.setSignalBandwidth(62500);
   rf95.setSpreadingFactor(10);
+  encDriver.setCADTimeout(500);
   msgCipher.setKey(encryptKey, sizeof(encryptKey));
   encDriver.setHeaderTo(GW_NETWORK_ID);
   encDriver.setThisAddress(NETWORK_ID);
@@ -90,7 +94,7 @@ void loop()
     if(encDriver.recv(buf, &len))
     {
       String cmd = (char*)buf;
-      Serial.println(cmd);
+      // Serial.println(cmd);
 
       if(cmd.substring(0, 8).equals(PASSWORD))
       {
@@ -101,6 +105,7 @@ void loop()
           //WiFi ON
           if(WiFi.softAP(SSID, WIFIPASS))
           {
+            isWifiEnabled = true;
             SendResponse(ON, OK);
           }
           else
@@ -113,6 +118,7 @@ void loop()
           //WiFi OFF
           if(WiFi.softAPdisconnect(true))
           {
+            isWifiEnabled = false;
             SendResponse(OFF, OK);
           }
           else
@@ -130,12 +136,20 @@ void loop()
         }
         else if(cmd.equals(PING))
         {
-          SendResponse(SYN, OK);
+          if(isWifiEnabled)
+          {
+            SendResponse(ON, OK);
+          }
+          else
+          {
+            SendResponse(OFF, OK);
+          }
         }
         else
         {
           SendResponse("Unknown command", ERROR);
         }
+        timeNow = millis();
       }
     }
     else
@@ -145,7 +159,7 @@ void loop()
   }
   else
   {
-    //Send SYN request each 3 seconds until ACK received
+    //Send SYN request each 4 seconds until ACK received
     if(millis() > timeNow + delayPeriod)
     {
       timeNow = millis();
