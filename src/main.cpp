@@ -73,6 +73,8 @@ void setup()
   Serial.println(RF95_FREQ);
 
   rf95.setTxPower(23, false);
+  rf95.setSignalBandwidth(62500);
+  rf95.setSpreadingFactor(10);
   msgCipher.setKey(encryptKey, sizeof(encryptKey));
   encDriver.setHeaderTo(GW_NETWORK_ID);
   encDriver.setThisAddress(NETWORK_ID);
@@ -139,7 +141,7 @@ void loop()
   }
   else
   {
-    //Send SYN request each second until ACK received
+    //Send SYN request each 3 seconds until ACK received
     if(millis() > timeNow + delayPeriod)
     {
       timeNow = millis();
