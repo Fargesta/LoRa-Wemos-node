@@ -15,7 +15,7 @@ RHEncryptedDriver encDriver(rf95, msgCipher);
 bool isJoined = false;
 
 //Millis timer setup
-int delayPeriod = 3000;
+int delayPeriod = 4000;
 unsigned long timeNow = 0;
 
 void SendResponse(String responseText, String code)
@@ -127,6 +127,10 @@ void loop()
             delayPeriod = 300000;
             isJoined = true;
           }
+        }
+        else if(cmd.equals(PING))
+        {
+          SendResponse(SYN, OK);
         }
         else
         {

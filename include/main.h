@@ -5,10 +5,11 @@
 #define GW_PASSWORD "F!;Gx[+G"    //8 symbols
 
 //Commands
-#define SYN "sy"           //Initial SYN request
-#define ACK "ac"           //Network join confirmation after SYN
-#define ON "on"             //Turn on WiFi
-#define OFF "of"             //Turn off WiFi
+#define SYN "sy"    //Initial SYN request
+#define ACK "ac"    //Network join confirmation after SYN
+#define ON "on"     //Turn on WiFi
+#define OFF "of"    //Turn off WiFi
+#define PING "pn"   //status check
 
 //Response coded
 #define ERROR "er"
